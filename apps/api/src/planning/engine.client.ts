@@ -54,7 +54,8 @@ export class HttpEngineClient implements EngineClient {
 
   async health(): Promise<"ok" | "unavailable"> {
     try {
-      const res = await fetch(`${this.baseUrl}/health`, { signal: AbortSignal.timeout(2000) });
+      // Generous: a serverless engine cold start (dependency load) takes several seconds.
+      const res = await fetch(`${this.baseUrl}/health`, { signal: AbortSignal.timeout(10_000) });
       return res.ok ? "ok" : "unavailable";
     } catch {
       return "unavailable";

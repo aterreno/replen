@@ -47,7 +47,7 @@ Differences from the local stack, all switched by environment variables:
 | `ENGINE_BOOTSTRAP` | off; DuckDB file from `npm run data` | `1`: regenerate the deterministic dataset into `/tmp` and load DuckDB on cold start | No data files shipped |
 | `DEMO_MODE` | off | `1`: seed on first request, admin "Reset demo data", daily reset via Vercel Cron (`/api/cron/reset-demo`, `CRON_SECRET`) | Shared public data needs a way back to a clean state |
 
-Everyone who visits shares one dataset and any role can be chosen at sign-in, which is intended for a synthetic demo and would not be acceptable with real data. The first request after the functions have scaled to zero takes several seconds (engine cold start, data generation).
+Everyone who visits shares one dataset and any role can be chosen at sign-in, which is intended for a synthetic demo and would not be acceptable with real data. The first request after the functions have scaled to zero takes several seconds. The engine's dependencies (OR-Tools, which pulls in pandas, plus DuckDB and numpy) total about 243 MB on Linux, above Vercel's standard Python bundle size, so Vercel loads part of them at cold start (about 2 s), then the engine regenerates its dataset on the first planning call (about 1 s).
 
 ## Simulated versus production-ready
 
