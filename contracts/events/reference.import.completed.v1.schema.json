@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.replen.local/events/reference.import.completed.v1.schema.json",
+  "title": "replen.reference.import.completed.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "entity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rows": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "batchId": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "required": [
+    "entity",
+    "rows",
+    "batchId"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.replen.local/events/planning.order-proposal.superseded.v1.schema.json",
+  "title": "replen.planning.order-proposal.superseded.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "proposalId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "supersededByRunId": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "required": [
+    "proposalId",
+    "supersededByRunId"
+  ]
+}

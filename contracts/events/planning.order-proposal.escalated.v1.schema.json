@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.replen.local/events/planning.order-proposal.escalated.v1.schema.json",
+  "title": "replen.planning.order-proposal.escalated.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "proposalId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "escalatedBy": {
+      "type": "string",
+      "minLength": 1
+    },
+    "value": {
+      "type": "number",
+      "minimum": 0
+    },
+    "escalatorLimit": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "proposalId",
+    "escalatedBy",
+    "value",
+    "escalatorLimit"
+  ]
+}

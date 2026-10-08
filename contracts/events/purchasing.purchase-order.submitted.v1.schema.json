@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.replen.local/events/purchasing.purchase-order.submitted.v1.schema.json",
+  "title": "replen.purchasing.purchase-order.submitted.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "poId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "poNumber": {
+      "type": "string",
+      "minLength": 1
+    },
+    "erpPoNumber": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "submittedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "poId",
+    "poNumber",
+    "erpPoNumber",
+    "attempt",
+    "submittedAt"
+  ]
+}

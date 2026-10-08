@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.replen.local/events/purchasing.purchase-order.created.v1.schema.json",
+  "title": "replen.purchasing.purchase-order.created.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "poId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "poNumber": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceProposalId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "supplierId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "destinationLocationId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "orderDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "expectedDeliveryDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "totalValue": {
+      "type": "number",
+      "minimum": 0
+    },
+    "approvedBy": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "lineNo": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sku": {
+            "type": "string",
+            "minLength": 1
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "unitCost": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "lineNo",
+          "sku",
+          "quantity",
+          "unitCost"
+        ]
+      }
+    }
+  },
+  "required": [
+    "poId",
+    "poNumber",
+    "sourceProposalId",
+    "supplierId",
+    "destinationLocationId",
+    "orderDate",
+    "expectedDeliveryDate",
+    "currency",
+    "totalValue",
+    "approvedBy",
+    "lines"
+  ]
+}

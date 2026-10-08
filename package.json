@@ -1,0 +1,27 @@
+{
+  "name": "replen",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "setup": "npm install && npm run engine:sync && npm run data",
+    "engine:sync": "cd engine && uv sync",
+    "data": "cd engine && uv run replen-engine generate --out ../data/synthetic && uv run replen-engine import --dir ../data/synthetic --db ../.data/analytics.duckdb",
+    "contracts:generate": "cd engine && uv run replen-engine export-schemas --out ../contracts/engine && cd .. && npm run generate -w @replen/contracts",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "lint:engine": "cd engine && uv run ruff check src tests",
+    "test": "npm run test:engine && npm run test --workspaces --if-present",
+    "test:engine": "cd engine && uv run pytest",
+    "dev": "node scripts/dev.mjs",
+    "seed": "node scripts/seed.mjs",
+    "e2e": "node scripts/e2e.mjs",
+    "benchmark": "cd engine && uv run replen-engine benchmark --series 5000"
+  }
+}

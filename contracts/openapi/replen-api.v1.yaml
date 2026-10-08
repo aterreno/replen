@@ -1,0 +1,825 @@
+openapi: 3.1.0
+info:
+  title: Replen planner API
+  version: 1.0.0
+  description: |
+    Transactional API for the Replen ordering and replenishment platform (replen-api).
+    All quantities are integer units. Money is GBP with two decimals.
+    Errors use RFC 9457 problem details. Mutating POSTs accept an Idempotency-Key header.
+servers:
+  - url: http://localhost:4000
+security:
+  - bearer: []
+tags:
+  - name: identity
+  - name: reference
+  - name: inventory
+  - name: planning
+  - name: purchasing
+  - name: audit
+  - name: insights
+paths:
+  /health:
+    get:
+      tags: [insights]
+      security: []
+      summary: Liveness and dependency status
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+  /api/v1/auth/dev-token:
+    post:
+      tags: [identity]
+      security: []
+      summary: Issue a development token (only when AUTH_MODE=dev)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              additionalProperties: false
+              properties:
+                userId: { type: string }
+      responses:
+        "200":
+          description: Token issued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DevToken" }
+        "404": { $ref: "#/components/responses/Problem" }
+  /api/v1/users:
+    get:
+      tags: [identity]
+      security: []
+      summary: List users available for development login (only when AUTH_MODE=dev)
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/User" } }
+  /api/v1/me:
+    get:
+      tags: [identity]
+      summary: Current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Problem" }
+  /api/v1/imports/{entity}:
+    post:
+      tags: [reference]
+      summary: Upsert a batch of reference, inventory or history records (admin)
+      parameters:
+        - name: entity
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [locations, suppliers, products, sourcing, item-locations, order-constraints, inventory-snapshots, open-purchase-orders, receipt-history]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [records]
+              properties:
+                records: { type: array, items: { type: object, additionalProperties: true } }
+      responses:
+        "200":
+          description: Imported
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ImportResult" }
+        "400": { $ref: "#/components/responses/Problem" }
+        "403": { $ref: "#/components/responses/Problem" }
+  /api/v1/suppliers:
+    get:
+      tags: [reference]
+      responses:
+        "200":
+          description: Suppliers
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Supplier" } }
+  /api/v1/locations:
+    get:
+      tags: [reference]
+      responses:
+        "200":
+          description: Locations
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Location" } }
+  /api/v1/products:
+    get:
+      tags: [reference]
+      responses:
+        "200":
+          description: Products
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Product" } }
+  /api/v1/inventory-positions:
+    get:
+      tags: [inventory]
+      parameters:
+        - { name: sku, in: query, schema: { type: string } }
+        - { name: locationId, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Positions
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/InventoryPosition" } }
+  /api/v1/planning-runs:
+    get:
+      tags: [planning]
+      responses:
+        "200":
+          description: Recent runs, newest first
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/PlanningRun" } }
+    post:
+      tags: [planning]
+      summary: Run forecast and replenishment for the scope; supersedes open proposals in scope
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlanningRunRequest" }
+      responses:
+        "201":
+          description: Run completed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlanningRun" }
+        "502": { $ref: "#/components/responses/Problem" }
+  /api/v1/planning-runs/{runId}:
+    get:
+      tags: [planning]
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlanningRun" }
+        "404": { $ref: "#/components/responses/Problem" }
+  /api/v1/override-reasons:
+    get:
+      tags: [planning]
+      responses:
+        "200":
+          description: Reason codes for overrides and rejections
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ReasonCode" } }
+  /api/v1/order-proposals:
+    get:
+      tags: [planning]
+      summary: Exception-first work queue
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: supplierId, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Proposals sorted by unresolved blocking, warnings, value
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ProposalSummary" } }
+  /api/v1/order-proposals/{proposalId}:
+    get:
+      tags: [planning]
+      parameters:
+        - $ref: "#/components/parameters/ProposalId"
+      responses:
+        "200":
+          description: Proposal with lines and explanations
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Proposal" }
+        "404": { $ref: "#/components/responses/Problem" }
+  /api/v1/order-proposals/{proposalId}/lines/{lineId}:
+    patch:
+      tags: [planning]
+      summary: Override a line quantity with a reason code
+      parameters:
+        - $ref: "#/components/parameters/ProposalId"
+        - { name: lineId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdjustLineRequest" }
+      responses:
+        "200":
+          description: Updated proposal
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Proposal" }
+        "409": { $ref: "#/components/responses/Problem" }
+        "422": { $ref: "#/components/responses/Problem" }
+  /api/v1/order-proposals/{proposalId}/escalate:
+    post:
+      tags: [planning]
+      summary: Request approval from a user with a higher limit
+      parameters:
+        - $ref: "#/components/parameters/ProposalId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DecisionRequest" }
+      responses:
+        "200":
+          description: Escalated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Proposal" }
+        "409": { $ref: "#/components/responses/Problem" }
+  /api/v1/order-proposals/{proposalId}/approve:
+    post:
+      tags: [planning]
+      parameters:
+        - $ref: "#/components/parameters/ProposalId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DecisionRequest" }
+      responses:
+        "200":
+          description: Approved; purchase order creation follows asynchronously
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Proposal" }
+        "403": { $ref: "#/components/responses/Problem" }
+        "409": { $ref: "#/components/responses/Problem" }
+        "422": { $ref: "#/components/responses/Problem" }
+  /api/v1/order-proposals/{proposalId}/reject:
+    post:
+      tags: [planning]
+      parameters:
+        - $ref: "#/components/parameters/ProposalId"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RejectRequest" }
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Proposal" }
+        "409": { $ref: "#/components/responses/Problem" }
+  /api/v1/order-proposals/{proposalId}/simulate:
+    post:
+      tags: [planning]
+      summary: What-if on the run's frozen inputs. Nothing is persisted.
+      parameters:
+        - $ref: "#/components/parameters/ProposalId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SimulationRequest" }
+      responses:
+        "200":
+          description: Baseline vs scenario per line
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SimulationResult" }
+  /api/v1/purchase-orders:
+    get:
+      tags: [purchasing]
+      responses:
+        "200":
+          description: Purchase orders, newest first
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/PurchaseOrder" } }
+  /api/v1/purchase-orders/{poId}:
+    get:
+      tags: [purchasing]
+      parameters:
+        - { name: poId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Purchase order
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PurchaseOrder" }
+        "404": { $ref: "#/components/responses/Problem" }
+  /api/v1/purchase-orders/{poId}/retry-submission:
+    post:
+      tags: [purchasing]
+      parameters:
+        - { name: poId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Submission retried
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PurchaseOrder" }
+        "409": { $ref: "#/components/responses/Problem" }
+  /api/v1/audit-events:
+    get:
+      tags: [audit]
+      parameters:
+        - { name: entityType, in: query, schema: { type: string } }
+        - { name: entityId, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        "200":
+          description: Audit events, newest first
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/AuditEvent" } }
+  /api/v1/audit-events/verify:
+    get:
+      tags: [audit]
+      summary: Recompute the hash chain
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuditVerification" }
+  /api/v1/events:
+    get:
+      tags: [audit]
+      summary: Recent domain events from the outbox
+      parameters:
+        - { name: subject, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        "200":
+          description: CloudEvents envelopes with delivery status
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/OutboxEvent" } }
+  /api/v1/kpis:
+    get:
+      tags: [insights]
+      responses:
+        "200":
+          description: KPI snapshot with definitions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Kpis" }
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, maxLength: 200 }
+    ProposalId:
+      name: proposalId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    Problem:
+      description: Problem details
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code: { type: string }
+        correlationId: { type: string }
+        errors: { type: array, items: { type: object, additionalProperties: true } }
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+        version: { type: string }
+        database: { type: string }
+        engine: { type: string }
+        erp: { type: string }
+    Role:
+      type: string
+      enum: [viewer, planner, senior_planner, head_of_replenishment, admin]
+    User:
+      type: object
+      required: [userId, displayName, roles, approvalLimit]
+      properties:
+        userId: { type: string }
+        displayName: { type: string }
+        roles: { type: array, items: { $ref: "#/components/schemas/Role" } }
+        approvalLimit: { type: [number, "null"], description: "GBP; null means unlimited" }
+    DevToken:
+      type: object
+      required: [token, expiresAt, user]
+      properties:
+        token: { type: string }
+        expiresAt: { type: string, format: date-time }
+        user: { $ref: "#/components/schemas/User" }
+    ImportResult:
+      type: object
+      required: [entity, rows, batchId]
+      properties:
+        entity: { type: string }
+        rows: { type: integer }
+        batchId: { type: string, format: uuid }
+    Supplier:
+      type: object
+      required: [supplierId, name, leadTimeDays, leadTimeStdDays, orderWeekdays]
+      properties:
+        supplierId: { type: string }
+        name: { type: string }
+        leadTimeDays: { type: integer }
+        leadTimeStdDays: { type: number }
+        orderWeekdays: { type: array, items: { type: integer } }
+        deliveryWeekdays: { type: [array, "null"], items: { type: integer } }
+        otif: { type: [number, "null"] }
+    Location:
+      type: object
+      required: [locationId, name, type]
+      properties:
+        locationId: { type: string }
+        name: { type: string }
+        type: { type: string, enum: [STORE, DC] }
+        region: { type: [string, "null"] }
+        servingDcId: { type: [string, "null"] }
+        fulfilsOnline: { type: boolean }
+    Product:
+      type: object
+      required: [sku, name, category, status]
+      properties:
+        sku: { type: string }
+        name: { type: string }
+        category: { type: string }
+        subcategory: { type: string }
+        brand: { type: string }
+        colourFamily: { type: string }
+        unitPrice: { type: number }
+        status: { type: string, enum: [ACTIVE, NEW, DISCONTINUED] }
+        launchDate: { type: [string, "null"], format: date }
+        endOfLifeDate: { type: [string, "null"], format: date }
+    OpenOrder:
+      type: object
+      required: [reference, quantity, expectedDate, source]
+      properties:
+        reference: { type: string }
+        quantity: { type: integer }
+        expectedDate: { type: string, format: date }
+        source: { type: string, enum: [LEGACY, REPLEN] }
+    InventoryPosition:
+      type: object
+      required: [sku, locationId, onHand, reserved, inTransit, damaged, returnsPending, onOrder, availableToSell, inventoryPosition]
+      properties:
+        sku: { type: string }
+        locationId: { type: string }
+        asOfDate: { type: [string, "null"], format: date }
+        onHand: { type: integer }
+        reserved: { type: integer }
+        inTransit: { type: integer }
+        damaged: { type: integer }
+        returnsPending: { type: integer }
+        onOrder: { type: integer }
+        availableToSell: { type: integer, description: "max(0, on-hand - reserved)" }
+        inventoryPosition: { type: integer, description: "max(on-hand,0) - reserved + in-transit + on-order" }
+        openOrders: { type: array, items: { $ref: "#/components/schemas/OpenOrder" } }
+    Accuracy:
+      type: object
+      properties:
+        wape: { type: [number, "null"] }
+        bias: { type: [number, "null"] }
+        naiveWape: { type: [number, "null"] }
+        seriesEvaluated: { type: integer }
+    PlanningRunRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        asOfDate: { type: string, format: date }
+        supplierIds: { type: array, items: { type: string } }
+    PlanningRun:
+      type: object
+      required: [runId, asOfDate, status, startedAt]
+      properties:
+        runId: { type: string, format: uuid }
+        asOfDate: { type: string, format: date }
+        status: { type: string, enum: [RUNNING, COMPLETED, FAILED] }
+        requestedBy: { type: string }
+        engineVersion: { type: [string, "null"] }
+        contractVersion: { type: [string, "null"] }
+        accuracy: { oneOf: [{ $ref: "#/components/schemas/Accuracy" }, { type: "null" }] }
+        stats: { type: [object, "null"], additionalProperties: true }
+        error: { type: [string, "null"] }
+        startedAt: { type: string, format: date-time }
+        completedAt: { type: [string, "null"], format: date-time }
+    ReasonCode:
+      type: object
+      required: [code, label, appliesTo]
+      properties:
+        code: { type: string }
+        label: { type: string }
+        appliesTo: { type: string, enum: [override, reject] }
+    ProposalStatus:
+      type: string
+      enum: [PROPOSED, AWAITING_APPROVAL, APPROVED, REJECTED, SUPERSEDED]
+    Severity:
+      type: string
+      enum: [none, info, warning, blocking]
+    ProposalSummary:
+      type: object
+      required: [proposalId, runId, supplierId, destinationLocationId, orderDate, expectedDeliveryDate, status, version, lineCount, orderedLineCount, recommendedValue, finalValue, currency, blockingCount, unresolvedBlockingCount, warningCount, createdAt]
+      properties:
+        proposalId: { type: string, format: uuid }
+        runId: { type: string, format: uuid }
+        supplierId: { type: string }
+        supplierName: { type: string }
+        destinationLocationId: { type: string }
+        orderDate: { type: string, format: date }
+        expectedDeliveryDate: { type: string, format: date }
+        status: { $ref: "#/components/schemas/ProposalStatus" }
+        version: { type: integer }
+        lineCount: { type: integer }
+        orderedLineCount: { type: integer }
+        recommendedValue: { type: number }
+        finalValue: { type: number }
+        currency: { type: string }
+        blockingCount: { type: integer }
+        unresolvedBlockingCount: { type: integer }
+        warningCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+        escalatedBy: { type: [string, "null"] }
+        decidedBy: { type: [string, "null"] }
+        decidedAt: { type: [string, "null"], format: date-time }
+    ProposalLine:
+      type: object
+      required: [lineId, sku, productName, unitCost, packSize, moq, recommendedQty, finalQty, severity, exceptionCodes, explanation]
+      properties:
+        lineId: { type: string, format: uuid }
+        sku: { type: string }
+        productName: { type: string }
+        category: { type: string }
+        unitCost: { type: number }
+        packSize: { type: integer }
+        moq: { type: integer }
+        recommendedQty: { type: integer }
+        finalQty: { type: integer }
+        overrideReason: { type: [string, "null"] }
+        overrideNote: { type: [string, "null"] }
+        overriddenBy: { type: [string, "null"] }
+        overriddenAt: { type: [string, "null"], format: date-time }
+        forecastOverPeriod: { type: number }
+        orderUpTo: { type: number }
+        safetyStock: { type: number }
+        inventoryPosition: { type: number }
+        protectionPeriodDays: { type: integer }
+        daysOfSupplyAfterOrder: { type: [number, "null"] }
+        projectedStockoutDate: { type: [string, "null"], format: date }
+        severity: { $ref: "#/components/schemas/Severity" }
+        exceptionCodes: { type: array, items: { type: string } }
+        resolved: { type: boolean, description: "Blocking exceptions reviewed by a planner" }
+        explanation: { type: object, additionalProperties: true, description: "Engine calculation trace (contracts/engine/plan-response.v1.schema.json#/$defs/Explanation)" }
+        chart: { type: object, additionalProperties: true }
+        accuracy: { type: [object, "null"], additionalProperties: true }
+    ApprovalCheck:
+      type: object
+      required: [canApprove, canEscalate, value, limit, reasons]
+      properties:
+        canApprove: { type: boolean }
+        canEscalate: { type: boolean }
+        value: { type: number }
+        limit: { type: [number, "null"] }
+        reasons: { type: array, items: { type: object, required: [code, message], properties: { code: { type: string }, message: { type: string } } } }
+    Proposal:
+      allOf:
+        - $ref: "#/components/schemas/ProposalSummary"
+        - type: object
+          required: [lines, notes, orderExceptions, approval]
+          properties:
+            solverStatus: { type: [string, "null"] }
+            notes: { type: array, items: { type: string } }
+            orderExceptions:
+              type: array
+              items:
+                type: object
+                required: [code, severity, message]
+                properties:
+                  code: { type: string }
+                  severity: { type: string }
+                  message: { type: string }
+            escalatedAt: { type: [string, "null"], format: date-time }
+            decisionComment: { type: [string, "null"] }
+            purchaseOrder:
+              oneOf:
+                - type: "null"
+                - type: object
+                  required: [poId, poNumber, status, erpPoNumber]
+                  properties:
+                    poId: { type: string, format: uuid }
+                    poNumber: { type: string }
+                    status: { type: string }
+                    erpPoNumber: { type: [string, "null"] }
+            lines: { type: array, items: { $ref: "#/components/schemas/ProposalLine" } }
+            approval: { $ref: "#/components/schemas/ApprovalCheck" }
+    AdjustLineRequest:
+      type: object
+      required: [finalQty, reasonCode, expectedVersion]
+      additionalProperties: false
+      properties:
+        finalQty: { type: integer, minimum: 0 }
+        reasonCode: { type: string }
+        note: { type: string, maxLength: 500 }
+        expectedVersion: { type: integer, minimum: 1 }
+    DecisionRequest:
+      type: object
+      required: [expectedVersion]
+      additionalProperties: false
+      properties:
+        expectedVersion: { type: integer, minimum: 1 }
+        comment: { type: string, maxLength: 500 }
+    RejectRequest:
+      type: object
+      required: [expectedVersion, reasonCode]
+      additionalProperties: false
+      properties:
+        expectedVersion: { type: integer, minimum: 1 }
+        reasonCode: { type: string }
+        comment: { type: string, maxLength: 500 }
+    SimulationRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        leadTimeDeltaDays: { type: integer, minimum: -30, maximum: 90 }
+        demandMultiplier: { type: number, exclusiveMinimum: 0, maximum: 5 }
+        serviceLevel: { type: number, exclusiveMinimum: 0, exclusiveMaximum: 1 }
+        supplierDelayDays: { type: integer, minimum: 0, maximum: 90 }
+    SimulationLineValues:
+      type: object
+      required: [qty, forecastOverPeriod, orderUpTo, safetyStock, protectionPeriodDays]
+      properties:
+        qty: { type: integer }
+        forecastOverPeriod: { type: number }
+        orderUpTo: { type: number }
+        safetyStock: { type: number }
+        protectionPeriodDays: { type: integer }
+        daysOfSupplyAfterOrder: { type: [number, "null"] }
+        projectedStockoutDate: { type: [string, "null"], format: date }
+    SimulationResult:
+      type: object
+      required: [scenario, lines, totals]
+      properties:
+        scenario: { $ref: "#/components/schemas/SimulationRequest" }
+        lines:
+          type: array
+          items:
+            type: object
+            required: [sku, baseline, scenario]
+            properties:
+              sku: { type: string }
+              baseline: { $ref: "#/components/schemas/SimulationLineValues" }
+              scenario: { $ref: "#/components/schemas/SimulationLineValues" }
+        totals:
+          type: object
+          required: [baselineValue, scenarioValue, baselineUnits, scenarioUnits]
+          properties:
+            baselineValue: { type: number }
+            scenarioValue: { type: number }
+            baselineUnits: { type: integer }
+            scenarioUnits: { type: integer }
+    PurchaseOrderLine:
+      type: object
+      required: [lineNo, sku, quantity, unitCost]
+      properties:
+        lineNo: { type: integer }
+        sku: { type: string }
+        quantity: { type: integer }
+        unitCost: { type: number }
+        receivedQty: { type: integer }
+    PurchaseOrder:
+      type: object
+      required: [poId, poNumber, sourceProposalId, supplierId, destinationLocationId, status, totalValue, currency, lines, createdAt]
+      properties:
+        poId: { type: string, format: uuid }
+        poNumber: { type: string }
+        sourceProposalId: { type: string, format: uuid }
+        supplierId: { type: string }
+        destinationLocationId: { type: string }
+        orderDate: { type: string, format: date }
+        expectedDeliveryDate: { type: string, format: date }
+        status: { type: string, enum: [CREATED, SUBMITTED, SUBMISSION_FAILED, CONFIRMED, PARTIALLY_RECEIVED, RECEIVED, CANCELLED] }
+        erpPoNumber: { type: [string, "null"] }
+        submissionAttempts: { type: integer }
+        lastError: { type: [string, "null"] }
+        totalValue: { type: number }
+        currency: { type: string }
+        approvedBy: { type: [string, "null"] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        lines: { type: array, items: { $ref: "#/components/schemas/PurchaseOrderLine" } }
+    AuditEvent:
+      type: object
+      required: [seq, eventId, occurredAt, actor, action, entityType, entityId, hash]
+      properties:
+        seq: { type: integer }
+        eventId: { type: string, format: uuid }
+        occurredAt: { type: string, format: date-time }
+        actor: { type: string }
+        action: { type: string }
+        entityType: { type: string }
+        entityId: { type: string }
+        correlationId: { type: [string, "null"] }
+        before: {}
+        after: {}
+        metadata: {}
+        prevHash: { type: [string, "null"] }
+        hash: { type: string }
+    AuditVerification:
+      type: object
+      required: [valid, checked]
+      properties:
+        valid: { type: boolean }
+        checked: { type: integer }
+        firstInvalidSeq: { type: [integer, "null"] }
+    OutboxEvent:
+      type: object
+      required: [seq, event, publishedAt, attempts]
+      properties:
+        seq: { type: integer }
+        event:
+          type: object
+          additionalProperties: true
+          required: [id, type, subject, time, aggregateversion, correlationid]
+          properties:
+            id: { type: string }
+            type: { type: string }
+            subject: { type: string }
+            time: { type: string }
+            aggregateversion: { type: integer }
+            correlationid: { type: string }
+          description: "CloudEvents envelope (contracts/events/envelope.schema.json)"
+        publishedAt: { type: [string, "null"], format: date-time }
+        attempts: { type: integer }
+        lastError: { type: [string, "null"] }
+        deadLetteredAt: { type: [string, "null"], format: date-time }
+    KpiValue:
+      type: object
+      required: [key, label, value, unit, definition, source]
+      properties:
+        key: { type: string }
+        label: { type: string }
+        value: { type: [number, "null"] }
+        unit: { type: string }
+        definition: { type: string }
+        source: { type: string }
+        breakdown:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [label, value, unit]
+            properties:
+              label: { type: string }
+              value: { type: [number, "null"] }
+              unit: { type: string }
+    Kpis:
+      type: object
+      required: [generatedAt, synthetic, groups]
+      properties:
+        generatedAt: { type: string, format: date-time }
+        asOfDate: { type: [string, "null"], format: date }
+        synthetic: { type: boolean }
+        groups:
+          type: array
+          items:
+            type: object
+            required: [group, kpis]
+            properties:
+              group: { type: string }
+              kpis: { type: array, items: { $ref: "#/components/schemas/KpiValue" } }

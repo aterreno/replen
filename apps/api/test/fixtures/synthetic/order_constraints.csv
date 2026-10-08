@@ -1,0 +1,3 @@
+supplier_id,destination_location_id,min_order_value,budget
+SUP-ELEC,DC1,6000.00,
+SUP-FASH,DC1,0.00,4500.00

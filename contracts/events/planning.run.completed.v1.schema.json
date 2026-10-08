@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.replen.local/events/planning.run.completed.v1.schema.json",
+  "title": "replen.planning.run.completed.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "runId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "asOfDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "engineVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contractVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposals": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "lines": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "accuracy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "wape": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "bias": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "naiveWape": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "seriesEvaluated": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "wape",
+        "bias",
+        "naiveWape",
+        "seriesEvaluated"
+      ]
+    }
+  },
+  "required": [
+    "runId",
+    "asOfDate",
+    "engineVersion",
+    "contractVersion",
+    "proposals",
+    "lines",
+    "accuracy"
+  ]
+}

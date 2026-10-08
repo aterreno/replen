@@ -1,0 +1,16 @@
+{
+  "envelope": "envelope.schema.json",
+  "events": {
+    "replen.planning.run.completed.v1": "planning.run.completed.v1.schema.json",
+    "replen.planning.order-proposal.created.v1": "planning.order-proposal.created.v1.schema.json",
+    "replen.planning.order-proposal.superseded.v1": "planning.order-proposal.superseded.v1.schema.json",
+    "replen.planning.order-proposal.line-adjusted.v1": "planning.order-proposal.line-adjusted.v1.schema.json",
+    "replen.planning.order-proposal.escalated.v1": "planning.order-proposal.escalated.v1.schema.json",
+    "replen.planning.order-proposal.approved.v1": "planning.order-proposal.approved.v1.schema.json",
+    "replen.planning.order-proposal.rejected.v1": "planning.order-proposal.rejected.v1.schema.json",
+    "replen.purchasing.purchase-order.created.v1": "purchasing.purchase-order.created.v1.schema.json",
+    "replen.purchasing.purchase-order.submitted.v1": "purchasing.purchase-order.submitted.v1.schema.json",
+    "replen.purchasing.purchase-order.submission-failed.v1": "purchasing.purchase-order.submission-failed.v1.schema.json",
+    "replen.reference.import.completed.v1": "reference.import.completed.v1.schema.json"
+  }
+}

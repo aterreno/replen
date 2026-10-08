@@ -1,0 +1,7 @@
+location_id,name,type,region,serving_dc_id,fulfils_online
+DC1,Central DC (synthetic),DC,Midlands,,true
+S01,Northbridge (synthetic),STORE,North,DC1,false
+S02,Eastmoor (synthetic),STORE,East,DC1,false
+S03,Southvale (synthetic),STORE,South,DC1,false
+S04,Westholm (synthetic),STORE,West,DC1,false
+S05,Kingsford (synthetic),STORE,London,DC1,false

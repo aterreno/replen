@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.replen.local/events/planning.order-proposal.created.v1.schema.json",
+  "title": "replen.planning.order-proposal.created.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "proposalId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "runId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "supplierId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "destinationLocationId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "orderDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "expectedDeliveryDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "lineCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "recommendedValue": {
+      "type": "number",
+      "minimum": 0
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "blockingCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "warningCount": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "proposalId",
+    "runId",
+    "supplierId",
+    "destinationLocationId",
+    "orderDate",
+    "expectedDeliveryDate",
+    "lineCount",
+    "recommendedValue",
+    "currency",
+    "blockingCount",
+    "warningCount"
+  ]
+}

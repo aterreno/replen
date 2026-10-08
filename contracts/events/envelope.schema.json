@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.replen.local/events/envelope.schema.json",
+  "title": "Replen event envelope (CloudEvents 1.0 structured mode)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "subject",
+    "time",
+    "datacontenttype",
+    "dataschema",
+    "correlationid",
+    "aggregateversion",
+    "tenantid",
+    "data"
+  ],
+  "properties": {
+    "specversion": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source": {
+      "type": "string",
+      "pattern": "^replen-api/[a-z-]+$"
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^replen\\.[a-z-]+\\.[a-z-]+\\.[a-z-]+\\.v[0-9]+$"
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "datacontenttype": {
+      "const": "application/json"
+    },
+    "dataschema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "correlationid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "causationid": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "aggregateversion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "tenantid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "data": {
+      "type": "object"
+    }
+  }
+}

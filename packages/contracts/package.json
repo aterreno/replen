@@ -1,0 +1,21 @@
+{
+  "name": "@replen/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Type definitions generated from the committed OpenAPI, event and engine contracts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "generate": "node scripts/generate.mjs",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "devDependencies": {
+    "json-schema-to-typescript": "^16.0.0",
+    "openapi-typescript": "^7.13.0"
+  }
+}

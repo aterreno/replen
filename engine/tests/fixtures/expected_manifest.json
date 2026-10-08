@@ -1,0 +1,86 @@
+{
+  "asOfDate": "2026-10-05",
+  "edgeCases": {
+    "ELE-HEA-001": [
+      "reserved exceeds on-hand"
+    ],
+    "ELE-HEA-002": [
+      "future launch, no history"
+    ],
+    "ELE-KET-001": [
+      "planned promo with history"
+    ],
+    "ELE-TOA-001": [
+      "planned promo without history"
+    ],
+    "FAS-JMP-002": [
+      "end of life before delivery"
+    ],
+    "FAS-SHT-001": [
+      "discontinued with stock"
+    ],
+    "FAS-TEE-001": [
+      "budget constrained"
+    ],
+    "FUR-BKC-001": [
+      "overdue PO within grace"
+    ],
+    "FUR-LMP-001": [
+      "zero demand"
+    ],
+    "FUR-SOF-001": [
+      "DC capacity"
+    ],
+    "FUR-TBL-001": [
+      "overdue PO beyond grace"
+    ],
+    "HOM-BED-001": [
+      "promo history and planned promo"
+    ],
+    "HOM-BED-002": [
+      "negative on-hand at DC"
+    ],
+    "HOM-CAN-001": [
+      "MOQ applied"
+    ],
+    "HOM-CUS-002": [
+      "new product with 14 days of history"
+    ],
+    "HOM-TWL-003": [
+      "censored stockout days"
+    ],
+    "HOM-VAS-001": [
+      "MOQ conflict"
+    ]
+  },
+  "files": {
+    "inventory_snapshot.csv": "547e00d3eea219c5dc682b26aef82cd81fcba1f7a688ad331848754d91f5edc4",
+    "item_locations.csv": "5d4e31b7496669cf80c25bbbaf8c097a08d382f902dd4e70c20bb06cfe8ff169",
+    "locations.csv": "487ed1449c7efb308cacd5bd7997e054de23231156222776368ea808e1f5a8ba",
+    "open_purchase_orders.csv": "0734675c01b5c87fd6978693f65aee6c2e04b2c23c44cc598cf47b7ecc5467f6",
+    "order_constraints.csv": "fc35e7327bda7614433e0b157cb5aba3c09159f6c484d3a41df4bb5ecbea8f04",
+    "po_receipt_history.csv": "4d087bebf43470cc279996e738e34094f1528975a628e3d7a83d661673552142",
+    "products.csv": "467146fe55c3e37648d83ec8f36f3c51ef2ca1a145ff7ec522b7dc1693d40124",
+    "promotions.csv": "7fd1a1aed2ff9e06c74ad03904719aad0b96af9a8f76869bb7cac1abc36e5c60",
+    "sales_history.csv": "223e9c16676c1f171aff29bea688f1ab976bb059c5fdd29ed1168c83cfe1410d",
+    "sourcing.csv": "d63fa520cf88452a269fec549d925d896ffd965ef8ddafe8d3fd4f2a6ff2f2da",
+    "suppliers.csv": "5c162248768622ef3006635363c760a536da714c009def1bd82b5a27ce716c3c"
+  },
+  "generatorVersion": "1.0.0",
+  "historyDays": 730,
+  "rows": {
+    "inventory_snapshot.csv": 198,
+    "item_locations.csv": 198,
+    "locations.csv": 6,
+    "open_purchase_orders.csv": 6,
+    "order_constraints.csv": 2,
+    "po_receipt_history.csv": 72,
+    "products.csv": 33,
+    "promotions.csv": 174,
+    "sales_history.csv": 135864,
+    "sourcing.csv": 33,
+    "suppliers.csv": 6
+  },
+  "seed": 20261005,
+  "synthetic": true
+}

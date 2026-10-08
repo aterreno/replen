@@ -1,0 +1,758 @@
+{
+  "$defs": {
+    "Accuracy": {
+      "additionalProperties": false,
+      "properties": {
+        "absError": {
+          "title": "Abserror",
+          "type": "number"
+        },
+        "actualUnits": {
+          "title": "Actualunits",
+          "type": "number"
+        },
+        "bias": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Bias"
+        },
+        "error": {
+          "title": "Error",
+          "type": "number"
+        },
+        "lostUnitsEstimate": {
+          "default": 0.0,
+          "description": "Forecast demand on censored (out-of-stock) days in the backtest window",
+          "title": "Lostunitsestimate",
+          "type": "number"
+        },
+        "naiveWape": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Naivewape"
+        },
+        "wape": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Wape"
+        }
+      },
+      "required": [
+        "wape",
+        "bias",
+        "naiveWape",
+        "actualUnits",
+        "absError",
+        "error"
+      ],
+      "title": "Accuracy",
+      "type": "object"
+    },
+    "Analogue": {
+      "additionalProperties": false,
+      "properties": {
+        "dailyRate": {
+          "title": "Dailyrate",
+          "type": "number"
+        },
+        "similarity": {
+          "title": "Similarity",
+          "type": "number"
+        },
+        "sku": {
+          "title": "Sku",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sku",
+        "similarity",
+        "dailyRate"
+      ],
+      "title": "Analogue",
+      "type": "object"
+    },
+    "ConstraintApplied": {
+      "additionalProperties": false,
+      "properties": {
+        "after": {
+          "title": "After",
+          "type": "number"
+        },
+        "before": {
+          "title": "Before",
+          "type": "number"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "before",
+        "after",
+        "message"
+      ],
+      "title": "ConstraintApplied",
+      "type": "object"
+    },
+    "DailyPoint": {
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "format": "date",
+          "title": "Date",
+          "type": "string"
+        },
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "p10": {
+          "title": "P10",
+          "type": "number"
+        },
+        "p90": {
+          "title": "P90",
+          "type": "number"
+        }
+      },
+      "required": [
+        "date",
+        "mean",
+        "p10",
+        "p90"
+      ],
+      "title": "DailyPoint",
+      "type": "object"
+    },
+    "Explanation": {
+      "additionalProperties": false,
+      "properties": {
+        "constraints": {
+          "items": {
+            "$ref": "#/$defs/ConstraintApplied"
+          },
+          "title": "Constraints",
+          "type": "array"
+        },
+        "exceptions": {
+          "items": {
+            "$ref": "#/$defs/PlanException"
+          },
+          "title": "Exceptions",
+          "type": "array"
+        },
+        "narrative": {
+          "title": "Narrative",
+          "type": "string"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/SourceForecast"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/TraceStep"
+          },
+          "title": "Steps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "steps",
+        "constraints",
+        "exceptions",
+        "narrative",
+        "sources"
+      ],
+      "title": "Explanation",
+      "type": "object"
+    },
+    "HistoryPoint": {
+      "additionalProperties": false,
+      "properties": {
+        "censored": {
+          "description": "True when more than half of the demand sources were out of stock that day",
+          "title": "Censored",
+          "type": "boolean"
+        },
+        "date": {
+          "format": "date",
+          "title": "Date",
+          "type": "string"
+        },
+        "units": {
+          "title": "Units",
+          "type": "number"
+        }
+      },
+      "required": [
+        "date",
+        "units",
+        "censored"
+      ],
+      "title": "HistoryPoint",
+      "type": "object"
+    },
+    "ItemResult": {
+      "additionalProperties": false,
+      "properties": {
+        "accuracy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Accuracy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "avgDailyForecast": {
+          "title": "Avgdailyforecast",
+          "type": "number"
+        },
+        "daysOfSupplyAfterOrder": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Daysofsupplyafterorder"
+        },
+        "destinationLocationId": {
+          "title": "Destinationlocationid",
+          "type": "string"
+        },
+        "expectedDeliveryDate": {
+          "format": "date",
+          "title": "Expecteddeliverydate",
+          "type": "string"
+        },
+        "explanation": {
+          "$ref": "#/$defs/Explanation"
+        },
+        "forecast": {
+          "items": {
+            "$ref": "#/$defs/DailyPoint"
+          },
+          "title": "Forecast",
+          "type": "array"
+        },
+        "forecastOverPeriod": {
+          "title": "Forecastoverperiod",
+          "type": "number"
+        },
+        "history": {
+          "items": {
+            "$ref": "#/$defs/HistoryPoint"
+          },
+          "title": "History",
+          "type": "array"
+        },
+        "inventoryPosition": {
+          "title": "Inventoryposition",
+          "type": "number"
+        },
+        "orderDate": {
+          "format": "date",
+          "title": "Orderdate",
+          "type": "string"
+        },
+        "orderUpTo": {
+          "title": "Orderupto",
+          "type": "number"
+        },
+        "projectedStockoutDate": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Projectedstockoutdate"
+        },
+        "projection": {
+          "items": {
+            "$ref": "#/$defs/ProjectionPoint"
+          },
+          "title": "Projection",
+          "type": "array"
+        },
+        "protectionPeriodDays": {
+          "title": "Protectionperioddays",
+          "type": "integer"
+        },
+        "recommendedQty": {
+          "title": "Recommendedqty",
+          "type": "integer"
+        },
+        "safetyStock": {
+          "title": "Safetystock",
+          "type": "number"
+        },
+        "sku": {
+          "title": "Sku",
+          "type": "string"
+        },
+        "supplierId": {
+          "title": "Supplierid",
+          "type": "string"
+        },
+        "unconstrainedQty": {
+          "title": "Unconstrainedqty",
+          "type": "number"
+        }
+      },
+      "required": [
+        "sku",
+        "destinationLocationId",
+        "supplierId",
+        "orderDate",
+        "expectedDeliveryDate",
+        "recommendedQty",
+        "unconstrainedQty",
+        "orderUpTo",
+        "inventoryPosition",
+        "safetyStock",
+        "forecastOverPeriod",
+        "protectionPeriodDays",
+        "avgDailyForecast",
+        "daysOfSupplyAfterOrder",
+        "projectedStockoutDate",
+        "explanation",
+        "history",
+        "forecast",
+        "projection"
+      ],
+      "title": "ItemResult",
+      "type": "object"
+    },
+    "OrderResult": {
+      "additionalProperties": false,
+      "properties": {
+        "destinationLocationId": {
+          "title": "Destinationlocationid",
+          "type": "string"
+        },
+        "exceptions": {
+          "items": {
+            "$ref": "#/$defs/PlanException"
+          },
+          "title": "Exceptions",
+          "type": "array"
+        },
+        "expectedDeliveryDate": {
+          "format": "date",
+          "title": "Expecteddeliverydate",
+          "type": "string"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Notes",
+          "type": "array"
+        },
+        "orderDate": {
+          "format": "date",
+          "title": "Orderdate",
+          "type": "string"
+        },
+        "solverStatus": {
+          "title": "Solverstatus",
+          "type": "string"
+        },
+        "supplierId": {
+          "title": "Supplierid",
+          "type": "string"
+        },
+        "totalUnits": {
+          "title": "Totalunits",
+          "type": "integer"
+        },
+        "totalValue": {
+          "title": "Totalvalue",
+          "type": "number"
+        }
+      },
+      "required": [
+        "supplierId",
+        "destinationLocationId",
+        "orderDate",
+        "expectedDeliveryDate",
+        "totalUnits",
+        "totalValue",
+        "solverStatus",
+        "notes",
+        "exceptions"
+      ],
+      "title": "OrderResult",
+      "type": "object"
+    },
+    "PlanException": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "warning",
+            "blocking"
+          ],
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "message"
+      ],
+      "title": "PlanException",
+      "type": "object"
+    },
+    "ProjectionPoint": {
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "format": "date",
+          "title": "Date",
+          "type": "string"
+        },
+        "withOrder": {
+          "title": "Withorder",
+          "type": "number"
+        },
+        "withoutOrder": {
+          "title": "Withoutorder",
+          "type": "number"
+        }
+      },
+      "required": [
+        "date",
+        "withoutOrder",
+        "withOrder"
+      ],
+      "title": "ProjectionPoint",
+      "type": "object"
+    },
+    "RunAccuracy": {
+      "additionalProperties": false,
+      "properties": {
+        "bias": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Bias"
+        },
+        "naiveWape": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Naivewape"
+        },
+        "seriesEvaluated": {
+          "title": "Seriesevaluated",
+          "type": "integer"
+        },
+        "wape": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Wape"
+        }
+      },
+      "required": [
+        "wape",
+        "bias",
+        "naiveWape",
+        "seriesEvaluated"
+      ],
+      "title": "RunAccuracy",
+      "type": "object"
+    },
+    "SourceForecast": {
+      "additionalProperties": false,
+      "properties": {
+        "analogues": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Analogue"
+          },
+          "title": "Analogues",
+          "type": "array"
+        },
+        "censoredDays": {
+          "title": "Censoreddays",
+          "type": "integer"
+        },
+        "channel": {
+          "enum": [
+            "store",
+            "online"
+          ],
+          "title": "Channel",
+          "type": "string"
+        },
+        "demandClass": {
+          "enum": [
+            "smooth",
+            "erratic",
+            "intermittent",
+            "lumpy",
+            "zero",
+            "new"
+          ],
+          "title": "Demandclass",
+          "type": "string"
+        },
+        "locationId": {
+          "title": "Locationid",
+          "type": "string"
+        },
+        "meanOverPeriod": {
+          "title": "Meanoverperiod",
+          "type": "number"
+        },
+        "model": {
+          "enum": [
+            "seasonal_ma",
+            "sba",
+            "top_down",
+            "zero",
+            "analogue",
+            "short_history_mean"
+          ],
+          "title": "Model",
+          "type": "string"
+        },
+        "observedDays": {
+          "title": "Observeddays",
+          "type": "integer"
+        },
+        "promoUplift": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Promouplift"
+        },
+        "shareOfItemDemand": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Shareofitemdemand"
+        },
+        "varianceOverPeriod": {
+          "title": "Varianceoverperiod",
+          "type": "number"
+        },
+        "yearlySeasonality": {
+          "default": false,
+          "title": "Yearlyseasonality",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "locationId",
+        "channel",
+        "model",
+        "demandClass",
+        "meanOverPeriod",
+        "varianceOverPeriod",
+        "observedDays",
+        "censoredDays"
+      ],
+      "title": "SourceForecast",
+      "type": "object"
+    },
+    "TraceStep": {
+      "additionalProperties": false,
+      "properties": {
+        "formula": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Formula"
+        },
+        "inputs": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "default": {},
+          "title": "Inputs",
+          "type": "object"
+        },
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "value",
+        "unit"
+      ],
+      "title": "TraceStep",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "accuracy": {
+      "$ref": "#/$defs/RunAccuracy"
+    },
+    "asOfDate": {
+      "format": "date",
+      "title": "Asofdate",
+      "type": "string"
+    },
+    "contractVersion": {
+      "default": "1.0.0",
+      "title": "Contractversion",
+      "type": "string"
+    },
+    "engineVersion": {
+      "title": "Engineversion",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ItemResult"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "orders": {
+      "items": {
+        "$ref": "#/$defs/OrderResult"
+      },
+      "title": "Orders",
+      "type": "array"
+    },
+    "runId": {
+      "title": "Runid",
+      "type": "string"
+    },
+    "timingsMs": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Timingsms",
+      "type": "object"
+    }
+  },
+  "required": [
+    "engineVersion",
+    "runId",
+    "asOfDate",
+    "items",
+    "orders",
+    "accuracy",
+    "timingsMs"
+  ],
+  "title": "PlanResponse",
+  "type": "object"
+}

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.replen.local/events/planning.order-proposal.approved.v1.schema.json",
+  "title": "replen.planning.order-proposal.approved.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "proposalId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "supplierId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "destinationLocationId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "orderDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "expectedDeliveryDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "approvedBy": {
+      "type": "string",
+      "minLength": 1
+    },
+    "approvedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "totalValue": {
+      "type": "number",
+      "minimum": 0
+    },
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "lineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string",
+            "minLength": 1
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "unitCost": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "lineId",
+          "sku",
+          "quantity",
+          "unitCost"
+        ]
+      }
+    }
+  },
+  "required": [
+    "proposalId",
+    "supplierId",
+    "destinationLocationId",
+    "orderDate",
+    "expectedDeliveryDate",
+    "currency",
+    "approvedBy",
+    "approvedAt",
+    "totalValue",
+    "lines"
+  ]
+}

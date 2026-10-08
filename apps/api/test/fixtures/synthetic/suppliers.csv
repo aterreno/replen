@@ -1,0 +1,7 @@
+supplier_id,name,lead_time_days,lead_time_std_days,order_weekdays,delivery_weekdays,currency
+SUP-HOME,Hearth & Loom Textiles (synthetic),14,2.0,1|4,1|2|3|4|5,GBP
+SUP-ELEC,Voltline Appliances (synthetic),7,1.0,1|2|3|4|5,2|4,GBP
+SUP-FASH,Northern Cotton Co (synthetic),21,4.0,1,1|2|3|4|5,GBP
+SUP-FURN,Oakcraft Furniture (synthetic),35,7.0,3,1|3,GBP
+SUP-SEAS,Festive Lights Ltd (synthetic),28,3.0,1,1|2|3|4|5,GBP
+SUP-GARD,Greenway Outdoor (synthetic),21,3.0,2|5,1|2|3|4|5,GBP

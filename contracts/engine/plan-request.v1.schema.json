@@ -1,0 +1,461 @@
+{
+  "$defs": {
+    "DemandSource": {
+      "additionalProperties": false,
+      "description": "A series whose demand this destination must supply (store channel at a store, online at a DC).",
+      "properties": {
+        "channel": {
+          "enum": [
+            "store",
+            "online"
+          ],
+          "title": "Channel",
+          "type": "string"
+        },
+        "locationId": {
+          "title": "Locationid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "locationId",
+        "channel"
+      ],
+      "title": "DemandSource",
+      "type": "object"
+    },
+    "InventoryBuckets": {
+      "additionalProperties": false,
+      "properties": {
+        "damaged": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Damaged",
+          "type": "integer"
+        },
+        "inTransit": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Intransit",
+          "type": "integer"
+        },
+        "onHand": {
+          "title": "Onhand",
+          "type": "integer"
+        },
+        "reserved": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Reserved",
+          "type": "integer"
+        },
+        "returnsPending": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Returnspending",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "onHand"
+      ],
+      "title": "InventoryBuckets",
+      "type": "object"
+    },
+    "Lifecycle": {
+      "additionalProperties": false,
+      "properties": {
+        "endOfLifeDate": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Endoflifedate"
+        },
+        "launchDate": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Launchdate"
+        },
+        "status": {
+          "default": "ACTIVE",
+          "enum": [
+            "ACTIVE",
+            "NEW",
+            "DISCONTINUED"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "Lifecycle",
+      "type": "object"
+    },
+    "OpenOrder": {
+      "additionalProperties": false,
+      "properties": {
+        "expectedDate": {
+          "format": "date",
+          "title": "Expecteddate",
+          "type": "string"
+        },
+        "quantity": {
+          "minimum": 0,
+          "title": "Quantity",
+          "type": "integer"
+        },
+        "reference": {
+          "title": "Reference",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reference",
+        "quantity",
+        "expectedDate"
+      ],
+      "title": "OpenOrder",
+      "type": "object"
+    },
+    "OrderConstraint": {
+      "additionalProperties": false,
+      "properties": {
+        "budget": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Budget"
+        },
+        "destinationLocationId": {
+          "title": "Destinationlocationid",
+          "type": "string"
+        },
+        "minOrderValue": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Minordervalue",
+          "type": "number"
+        },
+        "supplierId": {
+          "title": "Supplierid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "supplierId",
+        "destinationLocationId"
+      ],
+      "title": "OrderConstraint",
+      "type": "object"
+    },
+    "PlanItem": {
+      "additionalProperties": false,
+      "properties": {
+        "demandSources": {
+          "items": {
+            "$ref": "#/$defs/DemandSource"
+          },
+          "minItems": 1,
+          "title": "Demandsources",
+          "type": "array"
+        },
+        "destinationLocationId": {
+          "title": "Destinationlocationid",
+          "type": "string"
+        },
+        "inventory": {
+          "$ref": "#/$defs/InventoryBuckets"
+        },
+        "lifecycle": {
+          "$ref": "#/$defs/Lifecycle",
+          "default": {
+            "endOfLifeDate": null,
+            "launchDate": null,
+            "status": "ACTIVE"
+          }
+        },
+        "openOrders": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/OpenOrder"
+          },
+          "title": "Openorders",
+          "type": "array"
+        },
+        "policy": {
+          "$ref": "#/$defs/Policy"
+        },
+        "sku": {
+          "title": "Sku",
+          "type": "string"
+        },
+        "sourcing": {
+          "$ref": "#/$defs/Sourcing"
+        },
+        "unitPrice": {
+          "minimum": 0,
+          "title": "Unitprice",
+          "type": "number"
+        }
+      },
+      "required": [
+        "sku",
+        "destinationLocationId",
+        "unitPrice",
+        "demandSources",
+        "sourcing",
+        "policy",
+        "inventory"
+      ],
+      "title": "PlanItem",
+      "type": "object"
+    },
+    "Policy": {
+      "additionalProperties": false,
+      "properties": {
+        "capacityUnits": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capacityunits"
+        },
+        "maxMoqCoverDays": {
+          "default": 28,
+          "minimum": 0,
+          "title": "Maxmoqcoverdays",
+          "type": "integer"
+        },
+        "overdueGraceDays": {
+          "default": 7,
+          "minimum": 0,
+          "title": "Overduegracedays",
+          "type": "integer"
+        },
+        "packRoundUpThreshold": {
+          "default": 0.25,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Packroundupthreshold",
+          "type": "number"
+        },
+        "serviceLevel": {
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Servicelevel",
+          "type": "number"
+        }
+      },
+      "required": [
+        "serviceLevel"
+      ],
+      "title": "Policy",
+      "type": "object"
+    },
+    "Scenario": {
+      "additionalProperties": false,
+      "description": "What-if overlays. Applied on top of the item inputs; never persisted by the engine.",
+      "properties": {
+        "demandMultiplier": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "title": "Demandmultiplier",
+          "type": "number"
+        },
+        "leadTimeDeltaDays": {
+          "default": 0,
+          "title": "Leadtimedeltadays",
+          "type": "integer"
+        },
+        "serviceLevel": {
+          "anyOf": [
+            {
+              "exclusiveMaximum": 1,
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Servicelevel"
+        },
+        "supplierDelayDays": {
+          "default": 0,
+          "description": "Shifts all open orders later",
+          "minimum": 0,
+          "title": "Supplierdelaydays",
+          "type": "integer"
+        }
+      },
+      "title": "Scenario",
+      "type": "object"
+    },
+    "Sourcing": {
+      "additionalProperties": false,
+      "properties": {
+        "deliveryWeekdays": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISO weekdays the supplier delivers",
+          "title": "Deliveryweekdays"
+        },
+        "leadTimeDays": {
+          "minimum": 0,
+          "title": "Leadtimedays",
+          "type": "integer"
+        },
+        "leadTimeStdDays": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Leadtimestddays",
+          "type": "number"
+        },
+        "moq": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Moq",
+          "type": "integer"
+        },
+        "orderWeekdays": {
+          "description": "ISO weekdays 1=Mon..7=Sun on which orders can be placed",
+          "items": {
+            "type": "integer"
+          },
+          "title": "Orderweekdays",
+          "type": "array"
+        },
+        "packSize": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Packsize",
+          "type": "integer"
+        },
+        "supplierId": {
+          "title": "Supplierid",
+          "type": "string"
+        },
+        "unitCost": {
+          "minimum": 0,
+          "title": "Unitcost",
+          "type": "number"
+        }
+      },
+      "required": [
+        "supplierId",
+        "leadTimeDays",
+        "orderWeekdays",
+        "unitCost"
+      ],
+      "title": "Sourcing",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "asOfDate": {
+      "format": "date",
+      "title": "Asofdate",
+      "type": "string"
+    },
+    "backtestDays": {
+      "default": 28,
+      "maximum": 91,
+      "minimum": 0,
+      "title": "Backtestdays",
+      "type": "integer"
+    },
+    "contractVersion": {
+      "default": "1.0.0",
+      "title": "Contractversion",
+      "type": "string"
+    },
+    "historyDays": {
+      "default": 730,
+      "maximum": 1460,
+      "minimum": 28,
+      "title": "Historydays",
+      "type": "integer"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/PlanItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "orderConstraints": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/OrderConstraint"
+      },
+      "title": "Orderconstraints",
+      "type": "array"
+    },
+    "persist": {
+      "default": true,
+      "title": "Persist",
+      "type": "boolean"
+    },
+    "runId": {
+      "title": "Runid",
+      "type": "string"
+    },
+    "scenario": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Scenario"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "runId",
+    "asOfDate",
+    "items"
+  ],
+  "title": "PlanRequest",
+  "type": "object"
+}

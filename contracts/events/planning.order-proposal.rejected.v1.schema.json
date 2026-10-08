@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.replen.local/events/planning.order-proposal.rejected.v1.schema.json",
+  "title": "replen.planning.order-proposal.rejected.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "proposalId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "rejectedBy": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reasonCode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "comment": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "proposalId",
+    "rejectedBy",
+    "reasonCode",
+    "comment"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.replen.local/events/planning.order-proposal.line-adjusted.v1.schema.json",
+  "title": "replen.planning.order-proposal.line-adjusted.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "proposalId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "lineId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "sku": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recommendedQty": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "previousQty": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "finalQty": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reasonCode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "note": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "adjustedBy": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "proposalId",
+    "lineId",
+    "sku",
+    "recommendedQty",
+    "previousQty",
+    "finalQty",
+    "reasonCode",
+    "note",
+    "adjustedBy"
+  ]
+}
