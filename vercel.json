@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "web": {
+      "root": "apps/web",
+      "installCommand": "cd ../.. && npm ci",
+      "bindings": [{ "type": "service", "service": "api", "format": "url", "env": "REPLEN_API_URL" }]
+    },
+    "api": {
+      "root": "apps/api",
+      "installCommand": "cd ../.. && npm ci",
+      "buildCommand": "npm run build",
+      "entrypoint": "server.js",
+      "bindings": [{ "type": "service", "service": "engine", "format": "url", "env": "ENGINE_URL" }]
+    },
+    "engine": {
+      "root": "engine",
+      "entrypoint": "main:app"
+    }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": { "service": "web" } }],
+  "crons": [{ "path": "/api/cron/reset-demo", "schedule": "0 4 * * *" }]
+}

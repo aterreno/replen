@@ -11,6 +11,7 @@ import { gbp0 } from "@/lib/format";
 export default function LoginPage() {
   const router = useRouter();
   const { data: users, error } = useSWR<User[]>("/api/v1/users", fetcher);
+  const { data: demo } = useSWR<{ demoMode: boolean }>("/api/v1/demo", fetcher);
   const [busy, setBusy] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -36,6 +37,13 @@ export default function LoginPage() {
         </div>
         <SyntheticBadge />
       </div>
+      {demo?.demoMode && (
+        <p className="mb-4 rounded-md border border-line bg-surface px-3 py-2 text-xs text-ink-2">
+          Public demo with synthetic data. Pick any role to try the planner workflow; everyone shares the same data, which
+          resets daily. Source and design documents:{" "}
+          <a className="text-accent-ink hover:underline" href="https://github.com/aterreno/replen">github.com/aterreno/replen</a>.
+        </p>
+      )}
       {error && <ErrorNote messages={["The API is not reachable. Start it with npm run dev."]} />}
       {failure && <ErrorNote messages={[failure]} />}
       <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">

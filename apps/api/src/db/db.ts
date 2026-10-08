@@ -44,8 +44,9 @@ export class PgDb implements Db {
 
   constructor(connectionString: string) {
     for (const [oid, fn] of Object.entries(parsers)) pg.types.setTypeParser(Number(oid), fn);
-    this.pool = new pg.Pool({ connectionString, max: 10 });
-    this.pool.on("connect", (c) => void c.query("SET TIME ZONE 'UTC'"));
+    // No session settings: transaction-mode poolers (Neon, PgBouncer) do not keep them. Timestamps are parsed
+    // with their offset (toIso), so the session time zone does not matter.
+    this.pool = new pg.Pool({ connectionString, max: 5 });
   }
 
   async query<T = Record<string, any>>(sql: string, params: unknown[] = []): Promise<T[]> {

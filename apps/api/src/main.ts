@@ -13,13 +13,18 @@ async function bootstrap() {
   });
   app.useBodyParser("json", { limit: "20mb" });
   configureApp(app);
-  await app.listen(config.port, "127.0.0.1");
+  // On Vercel the platform owns the socket; locally bind to loopback only.
+  if (process.env.VERCEL) await app.listen(config.port);
+  else await app.listen(config.port, "127.0.0.1");
   log("info", "replen-api listening", {
     port: config.port,
     database: config.databaseUrl ? "postgres" : `pglite:${config.pgliteDir ?? "memory"}`,
     engine: config.engineUrl,
     erp: config.erpUrl,
     authMode: config.authMode,
+    relayMode: config.relayMode,
+    erpMode: config.erpMode,
+    demoMode: config.demoMode,
   });
 }
 

@@ -28,8 +28,24 @@ export default function WorkQueue() {
   const { data: runs, mutate: mutateRuns } = useSWR<PlanningRun[]>("/api/v1/planning-runs", fetcher);
   const [running, setRunning] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const { data: demo } = useSWR<{ demoMode: boolean; status: string }>("/api/v1/demo", fetcher);
+  const [resetting, setResetting] = useState(false);
   const lastRun = runs?.[0];
   const mayRun = canPlan(user) || user.roles.includes("admin");
+  const isAdmin = user.roles.includes("admin");
+
+  const resetDemo = async () => {
+    setResetting(true);
+    setErrors([]);
+    try {
+      await api("/api/v1/demo/reset", { method: "POST", body: {} });
+      await Promise.all([mutate(), mutateRuns()]);
+    } catch (e) {
+      setErrors(e instanceof ApiError ? e.messages : [String(e)]);
+    } finally {
+      setResetting(false);
+    }
+  };
 
   const runPlanning = async () => {
     setRunning(true);
@@ -66,11 +82,18 @@ export default function WorkQueue() {
             )}
           </p>
         </div>
-        {mayRun && (
-          <Button variant="primary" onClick={runPlanning} disabled={running} data-testid="run-planning">
-            {running ? "Planning..." : "Run planning"}
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {demo?.demoMode && isAdmin && (
+            <Button onClick={resetDemo} disabled={resetting} data-testid="reset-demo">
+              {resetting ? "Resetting..." : "Reset demo data"}
+            </Button>
+          )}
+          {mayRun && (
+            <Button variant="primary" onClick={runPlanning} disabled={running || resetting} data-testid="run-planning">
+              {running ? "Planning..." : "Run planning"}
+            </Button>
+          )}
+        </div>
       </div>
       <ErrorNote messages={errors} />
 

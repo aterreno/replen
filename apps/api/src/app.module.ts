@@ -8,6 +8,7 @@ import {
   type OnApplicationShutdown,
 } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
+import { waitUntil } from "@vercel/functions";
 import type { NextFunction, Request, Response } from "express";
 import { AuditService } from "./audit/audit.service.js";
 import { runWithContext } from "./common/context.js";
@@ -24,6 +25,8 @@ import {
   PurchasingController,
 } from "./controllers.js";
 import { DB, type Db, PgDb, PgliteDb } from "./db/db.js";
+import { DemoController, DemoService } from "./demo/demo.service.js";
+import { ImportService } from "./imports/import.service.js";
 import { migrate } from "./db/migrations.js";
 import { AuthController, AuthGuard, TokenService, UsersService } from "./identity/identity.js";
 import { KpiService } from "./insights/kpi.service.js";
@@ -38,6 +41,7 @@ import { PlanningService } from "./planning/planning.service.js";
 import { ProposalsService } from "./planning/proposals.service.js";
 import { ERP } from "./purchasing/erp/erp.port.js";
 import { HttpErpAdapter } from "./purchasing/erp/http-erp.adapter.js";
+import { SimulatedErpAdapter } from "./purchasing/erp/simulated-erp.adapter.js";
 import { PurchasingService } from "./purchasing/purchasing.service.js";
 import { ReferenceController } from "./reference/reference.controller.js";
 import { ReferenceService } from "./reference/reference.service.js";
@@ -87,7 +91,12 @@ class CoreModule {
 
 @Module({
   providers: [
-    { provide: ERP, inject: [CONFIG], useFactory: (c: AppConfig) => new HttpErpAdapter(c.erpUrl, c.erpApiKey) },
+    {
+      provide: ERP,
+      inject: [CONFIG, DB],
+      useFactory: (c: AppConfig, db: Db) =>
+        c.erpMode === "simulated" ? new SimulatedErpAdapter(db) : new HttpErpAdapter(c.erpUrl, c.erpApiKey),
+    },
     PurchasingService,
   ],
   controllers: [PurchasingController],
@@ -123,14 +132,14 @@ class InventoryModule {}
     ProposalsService,
   ],
   controllers: [PlanningController],
-  exports: [ENGINE],
+  exports: [ENGINE, PlanningService],
 })
 class PlanningModule {}
 
 @Module({
   imports: [ReferenceModule, InventoryModule, PurchasingModule, PlanningModule],
-  providers: [KpiService],
-  controllers: [ImportsController, KpiController, HealthController],
+  providers: [KpiService, ImportService, DemoService],
+  controllers: [ImportsController, KpiController, HealthController, DemoController],
 })
 class ApplicationModule {}
 
@@ -141,8 +150,14 @@ export class AppModule {
   }
 }
 
-/** Correlation ids and access logs. Applied identically in main.ts and tests. */
+/** Correlation ids, access logs, demo seeding gate and serverless outbox draining. Used by main.ts and tests. */
 export function configureApp(app: INestApplication): void {
+  const config = app.get<AppConfig>(CONFIG);
+  const relay = app.get(OutboxRelay);
+  const purchasing = app.get(PurchasingService);
+  const demo = app.get(DemoService);
+  const ungated = /^\/(health|api\/v1\/(auth|users|demo))/;
+
   app.use((req: Request, res: Response, next: NextFunction) => {
     const correlationId = (req.header("x-correlation-id") || randomUUID()).slice(0, 100);
     res.setHeader("x-correlation-id", correlationId);
@@ -157,6 +172,27 @@ export function configureApp(app: INestApplication): void {
         }),
       ),
     );
+    if (config.relayMode === "after-request") {
+      // No background timers on serverless: drain the outbox once this response is sent, kept alive by
+      // waitUntil (a no-op outside Vercel, where the promise simply runs).
+      waitUntil(
+        new Promise((resolve) => res.on("finish", resolve)).then(() =>
+          runWithContext({ correlationId: `relay-${correlationId}` }, async () => {
+            await relay.drain();
+            await purchasing.retrySweep();
+          }).catch((err) => log("error", "after-request drain failed", { err: String(err) })),
+        ),
+      );
+    }
+    if (config.demoMode && !ungated.test(req.path)) {
+      runWithContext({ correlationId }, () =>
+        demo
+          .ensureSeeded()
+          .catch((err) => log("error", "demo seeding failed", { err: String(err) }))
+          .then(() => runWithContext({ correlationId }, () => next())),
+      );
+      return;
+    }
     runWithContext({ correlationId }, () => next());
   });
   app.enableShutdownHooks();

@@ -323,6 +323,25 @@ CREATE TABLE messaging.idempotency_key (
 );
 `,
   },
+  {
+    id: "009_demo_and_erp_simulator",
+    sql: `
+-- Hosted-demo support. Not part of the production design.
+CREATE SCHEMA IF NOT EXISTS mock_erp;
+CREATE SEQUENCE mock_erp.po_number_seq START 4500100001;
+CREATE TABLE mock_erp.purchase_order (
+  client_reference text PRIMARY KEY,
+  erp_po_number text NOT NULL UNIQUE,
+  payload jsonb NOT NULL,
+  received_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE public.demo_state (
+  id integer PRIMARY KEY CHECK (id = 1),
+  status text NOT NULL CHECK (status IN ('seeding', 'ready')),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+`,
+  },
 ];
 
 export async function migrate(db: Db): Promise<string[]> {
@@ -333,11 +352,17 @@ export async function migrate(db: Db): Promise<string[]> {
   const applied: string[] = [];
   for (const m of MIGRATIONS) {
     if (done.has(m.id)) continue;
-    await db.tx(async (q) => {
+    // Serverless instances may start together: the advisory lock serialises them and the re-check skips
+    // migrations another instance applied while this one waited.
+    const ran = await db.tx(async (q) => {
+      await q.query("SELECT pg_advisory_xact_lock(727274)");
+      const exists = await q.query("SELECT 1 FROM public.schema_migration WHERE id = $1", [m.id]);
+      if (exists.length) return false;
       await q.exec(m.sql);
       await q.query("INSERT INTO public.schema_migration (id) VALUES ($1)", [m.id]);
+      return true;
     });
-    applied.push(m.id);
+    if (ran) applied.push(m.id);
   }
   return applied;
 }

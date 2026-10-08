@@ -61,3 +61,19 @@ def test_generator_is_deterministic(tmp_path):
     m2 = generate(tmp_path / "b")
     assert m1["files"] == m2["files"]
     assert m1["files"] == expected["files"], "synthetic data changed: regenerate fixtures deliberately"
+
+
+def test_serverless_bootstrap_generates_and_serves_extract(tmp_path, monkeypatch):
+    monkeypatch.setenv("ENGINE_BOOTSTRAP", "1")
+    monkeypatch.setenv("ENGINE_SYNTHETIC_DIR", str(tmp_path / "synthetic"))
+    from replen_engine.store import AnalyticsStore
+
+    store = AnalyticsStore(tmp_path / "boot.duckdb")
+    client = TestClient(create_app(store))
+    r = client.get("/v1/demo/extract")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["asOfDate"] == "2026-10-05"
+    assert body["files"]["products.csv"].startswith("sku,name,category")
+    assert "sales_history.csv" not in body["files"]
+    assert store.status()["salesRows"] > 100_000

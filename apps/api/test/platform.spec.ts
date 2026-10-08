@@ -201,6 +201,8 @@ describe("OpenAPI response contracts", () => {
     for (const a of await get("/api/v1/audit-events?limit=20")) expect(validate("AuditEvent", a)).toEqual([]);
     for (const e of await get("/api/v1/events?limit=20")) expect(validate("OutboxEvent", e)).toEqual([]);
     expect(validate("User", await get("/api/v1/me"))).toEqual([]);
+    expect(validate("DemoState", await get("/api/v1/demo"))).toEqual([]);
+    expect(validate("Health", await get("/health"))).toEqual([]);
     const problem = (await t.http.get("/api/v1/order-proposals/00000000-0000-4000-8000-000000000000").set(auth(tok)).expect(404)).body;
     expect(validate("Problem", problem)).toEqual([]);
   });

@@ -107,17 +107,13 @@ class TestInventoryPositionEdgeCases:
         assert "OVERDUE_PO_COUNTED" in codes(ctx)
 
     def test_overdue_beyond_grace_excluded(self):
-        item = make_item(
-            open_orders=[OpenOrder(reference="L", quantity=20, expected_date=MONDAY - timedelta(days=12))]
-        )
+        item = make_item(open_orders=[OpenOrder(reference="L", quantity=20, expected_date=MONDAY - timedelta(days=12))])
         ctx = line(item)
         assert ctx.ip == 35
         assert "OVERDUE_PO_EXCLUDED" in codes(ctx)
 
     def test_supplier_delay_scenario_moves_order_out_of_overdue(self):
-        item = make_item(
-            open_orders=[OpenOrder(reference="L", quantity=20, expected_date=MONDAY - timedelta(days=12))]
-        )
+        item = make_item(open_orders=[OpenOrder(reference="L", quantity=20, expected_date=MONDAY - timedelta(days=12))])
         ctx = line(item, scenario=Scenario(supplier_delay_days=10))
         assert ctx.ip == 55
 

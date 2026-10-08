@@ -40,4 +40,25 @@ for (const [type, file] of Object.entries(index.events)) {
 events += "\nexport interface EventDataByType {\n" + names.map(([t, n]) => `  "${t}": ${n};\n`).join("") + "}\n";
 events += "\nexport type EventType = keyof EventDataByType;\n";
 await writeFile(join(out, "events.ts"), events);
-console.log("generated", ["api.ts", "engine-request.ts", "engine-response.ts", "events.ts"].join(", "));
+// The API validates against these schemas at runtime. Embedding them as a module keeps serverless bundles
+// self-contained (no reads from the repository's contracts/ directory).
+const embedded = {
+  envelope: JSON.parse(await readFile(join(root, "contracts/events", index.envelope), "utf8")),
+  events: Object.fromEntries(
+    await Promise.all(
+      Object.entries(index.events).map(async ([type, file]) => [
+        type,
+        JSON.parse(await readFile(join(root, "contracts/events", file), "utf8")),
+      ]),
+    ),
+  ),
+  engine: {
+    "plan-request": JSON.parse(await readFile(join(root, "contracts/engine/plan-request.v1.schema.json"), "utf8")),
+    "plan-response": JSON.parse(await readFile(join(root, "contracts/engine/plan-response.v1.schema.json"), "utf8")),
+  },
+};
+await writeFile(
+  join(root, "apps/api/src/generated/contract-schemas.ts"),
+  banner + `export const CONTRACT_SCHEMAS = ${JSON.stringify(embedded)} as const;\n`,
+);
+console.log("generated", ["api.ts", "engine-request.ts", "engine-response.ts", "events.ts", "apps/api contract-schemas.ts"].join(", "));

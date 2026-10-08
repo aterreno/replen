@@ -27,6 +27,28 @@ npm run benchmark      # engine throughput
 
 Development sign-in users (synthetic, A-46): `planner.priya` and `planner.omar` (GBP 5,000), `senior.sam` (GBP 50,000), `head.hana` (unlimited), `viewer.vic` (read only), `admin.ada` (imports, no spend authority). To start over: stop `npm run dev`, delete `.data/`, start again.
 
+## Hosted demo (Vercel)
+
+The public showcase runs the same code as one Vercel project with three [services](https://vercel.com/docs/services) (`vercel.json`):
+
+| Service | Root | Runtime | Reachable |
+|---|---|---|---|
+| `web` | `apps/web` | Next.js | Public (catch-all rewrite) |
+| `api` | `apps/api` | NestJS, compiled by SWC, entry `server.js` | Private: only through the web service's binding (`REPLEN_API_URL`) |
+| `engine` | `engine` | Python 3.13 FastAPI, entry `main:app`, dependencies from `pyproject.toml` via uv | Private: only through the API's binding (`ENGINE_URL`) |
+
+Differences from the local stack, all switched by environment variables:
+
+| Setting | Local | Hosted demo | Why |
+|---|---|---|---|
+| Database | PGlite | Neon Postgres via the Vercel Marketplace (`DATABASE_URL`) | Functions are stateless and scale to zero |
+| `RELAY_MODE` | `interval` (timer) | `after-request`: drain the outbox after each response, kept alive with `waitUntil` | No background timers on serverless |
+| `ERP_MODE` | `http` to `apps/mock-erp` | `simulated`: database-backed ERP simulator with the same idempotency contract and ACL payload | In-memory mocks are not shared across instances |
+| `ENGINE_BOOTSTRAP` | off; DuckDB file from `npm run data` | `1`: regenerate the deterministic dataset into `/tmp` and load DuckDB on cold start | No data files shipped |
+| `DEMO_MODE` | off | `1`: seed on first request, admin "Reset demo data", daily reset via Vercel Cron (`/api/cron/reset-demo`, `CRON_SECRET`) | Shared public data needs a way back to a clean state |
+
+Everyone who visits shares one dataset and any role can be chosen at sign-in, which is intended for a synthetic demo and would not be acceptable with real data. The first request after the functions have scaled to zero takes several seconds (engine cold start, data generation).
+
 ## Simulated versus production-ready
 
 | Area | In the slice | Production-ready? | Gap to production |

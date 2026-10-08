@@ -9,7 +9,7 @@ import { AppModule, configureApp } from "../src/app.module.js";
 import { loadConfig } from "../src/config.js";
 import { DB, type Db, PgliteDb } from "../src/db/db.js";
 import { migrate } from "../src/db/migrations.js";
-import { loadLegacyExtract } from "../src/imports/legacy-csv.js";
+import { LEGACY_FILES, loadLegacyExtract } from "../src/imports/legacy-csv.js";
 import { OutboxRelay } from "../src/messaging/relay.service.js";
 import { ENGINE, type EngineClient } from "../src/planning/engine.client.js";
 import { ERP, type ErpAcknowledgement, ErpError, type ErpPort, type ErpPurchaseOrder } from "../src/purchasing/erp/erp.port.js";
@@ -41,6 +41,13 @@ export class FixtureEngine implements EngineClient {
 
   async health() {
     return "ok" as const;
+  }
+
+  async demoExtract() {
+    const files = Object.fromEntries(
+      LEGACY_FILES.map(({ file }) => [file, readFileSync(join(FIXTURES, "synthetic", file), "utf8")]),
+    );
+    return { asOfDate: "2026-10-05", files };
   }
 }
 
@@ -81,20 +88,22 @@ export interface TestApp {
   close(): Promise<void>;
 }
 
-export async function createTestApp(opts: { engine?: FixtureEngine; erp?: FakeErp; db?: Db } = {}): Promise<TestApp> {
-  const config = loadConfig({ AUTH_MODE: "dev", AUTH_SECRET: "test-secret-0123456789", RELAY_INTERVAL_MS: "0" });
+export async function createTestApp(
+  opts: { engine?: FixtureEngine; erp?: FakeErp; db?: Db; env?: Record<string, string> } = {},
+): Promise<TestApp> {
+  const config = loadConfig({ AUTH_MODE: "dev", AUTH_SECRET: "test-secret-0123456789", RELAY_INTERVAL_MS: "0", ...opts.env });
   const db = opts.db ?? (await PgliteDb.create());
   await migrate(db);
   const engine = opts.engine ?? new FixtureEngine();
   const erp = opts.erp ?? new FakeErp();
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule.register(config)] })
+  let builder = Test.createTestingModule({ imports: [AppModule.register(config)] })
     .overrideProvider(DB)
     .useValue(db)
     .overrideProvider(ENGINE)
-    .useValue(engine)
-    .overrideProvider(ERP)
-    .useValue(erp)
-    .compile();
+    .useValue(engine);
+  // Simulated ERP mode exercises the real database-backed adapter instead of the in-memory fake.
+  if (config.erpMode !== "simulated") builder = builder.overrideProvider(ERP).useValue(erp);
+  const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication({ logger: false });
   configureApp(app);
   await app.init();

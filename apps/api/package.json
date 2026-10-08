@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "swc src -d dist --strip-leading-paths",
+    "build": "swc src -d dist --strip-leading-paths && node -e \"require('fs').writeFileSync('dist/package.json', JSON.stringify({ type: 'module' }) + '\\\\n')\"",
     "start": "node dist/main.js",
     "dev": "npm run build && node --enable-source-maps dist/main.js",
     "typecheck": "tsc --noEmit -p .",
@@ -15,6 +15,7 @@
     "@nestjs/common": "^12.1.2",
     "@nestjs/core": "^12.1.2",
     "@nestjs/platform-express": "^12.1.2",
+    "@vercel/functions": "^3.9.11",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "pg": "^8.23.1",

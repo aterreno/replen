@@ -1002,6 +1002,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/demo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Hosted-demo state (DEMO_MODE only seeds and resets synthetic data) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Demo state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DemoState"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/demo/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Wipe transactional data and re-seed the synthetic extract (admin, DEMO_MODE only) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reset complete */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: string;
+                            durationMs: number;
+                        };
+                    };
+                };
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/kpis": {
         parameters: {
             query?: never;
@@ -1059,6 +1136,18 @@ export interface components {
             database?: string;
             engine?: string;
             erp?: string;
+            /** @enum {string} */
+            authMode?: "dev" | "iap";
+            demoMode?: boolean;
+            /** @enum {string} */
+            relayMode?: "interval" | "after-request";
+            /** @enum {string} */
+            erpMode?: "http" | "simulated";
+        };
+        DemoState: {
+            demoMode: boolean;
+            /** @enum {string} */
+            status: "disabled" | "empty" | "seeding" | "ready";
         };
         /** @enum {string} */
         Role: "viewer" | "planner" | "senior_planner" | "head_of_replenishment" | "admin";

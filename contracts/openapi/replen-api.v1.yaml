@@ -376,6 +376,34 @@ paths:
           content:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/OutboxEvent" } }
+  /api/v1/demo:
+    get:
+      tags: [insights]
+      security: []
+      summary: Hosted-demo state (DEMO_MODE only seeds and resets synthetic data)
+      responses:
+        "200":
+          description: Demo state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoState" }
+  /api/v1/demo/reset:
+    post:
+      tags: [insights]
+      summary: Wipe transactional data and re-seed the synthetic extract (admin, DEMO_MODE only)
+      responses:
+        "200":
+          description: Reset complete
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, durationMs]
+                properties:
+                  status: { type: string }
+                  durationMs: { type: integer }
+        "403": { $ref: "#/components/responses/Problem" }
+        "404": { $ref: "#/components/responses/Problem" }
   /api/v1/kpis:
     get:
       tags: [insights]
@@ -428,6 +456,16 @@ components:
         database: { type: string }
         engine: { type: string }
         erp: { type: string }
+        authMode: { type: string, enum: [dev, iap] }
+        demoMode: { type: boolean }
+        relayMode: { type: string, enum: [interval, after-request] }
+        erpMode: { type: string, enum: [http, simulated] }
+    DemoState:
+      type: object
+      required: [demoMode, status]
+      properties:
+        demoMode: { type: boolean }
+        status: { type: string, enum: [disabled, empty, seeding, ready] }
     Role:
       type: string
       enum: [viewer, planner, senior_planner, head_of_replenishment, admin]

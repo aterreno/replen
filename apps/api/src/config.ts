@@ -14,6 +14,12 @@ const schema = z.object({
   EVENT_LOG_PATH: z.string().optional(),
   TENANT_ID: z.string().default("synthetic-retailer"),
   ERP_MAX_ATTEMPTS: z.coerce.number().int().min(1).default(3),
+  /** interval: background timer (long-running server). after-request: drain once each response is sent (serverless). */
+  RELAY_MODE: z.enum(["interval", "after-request"]).default("interval"),
+  /** http: ERP over HTTP through the ACL adapter. simulated: database-backed ERP simulator (hosted demo). */
+  ERP_MODE: z.enum(["http", "simulated"]).default("http"),
+  /** Hosted showcase: seed synthetic data on first use and allow admins to reset it. */
+  DEMO_MODE: z.enum(["0", "1"]).default("0"),
 });
 
 export interface AppConfig {
@@ -30,6 +36,9 @@ export interface AppConfig {
   eventLogPath?: string;
   tenantId: string;
   erpMaxAttempts: number;
+  relayMode: "interval" | "after-request";
+  erpMode: "http" | "simulated";
+  demoMode: boolean;
 }
 
 export const CONFIG = Symbol("CONFIG");
@@ -50,5 +59,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     eventLogPath: e.EVENT_LOG_PATH,
     tenantId: e.TENANT_ID,
     erpMaxAttempts: e.ERP_MAX_ATTEMPTS,
+    relayMode: e.RELAY_MODE,
+    erpMode: e.ERP_MODE,
+    demoMode: e.DEMO_MODE === "1",
   };
 }

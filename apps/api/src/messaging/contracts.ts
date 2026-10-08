@@ -1,9 +1,7 @@
-import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join } from "node:path";
 import { Injectable } from "@nestjs/common";
 import type { ErrorObject, ValidateFunction } from "ajv";
-import { repoPath } from "../common/util.js";
+import { CONTRACT_SCHEMAS } from "../generated/contract-schemas.js";
 
 const require = createRequire(import.meta.url);
 // ajv ships CommonJS; load it through require to avoid default-export interop differences.
@@ -22,7 +20,7 @@ export interface ValidationResult {
 const fmt = (errors: ErrorObject[] | null | undefined) =>
   (errors ?? []).map((e) => `${e.instancePath || "/"} ${e.message ?? "invalid"}`);
 
-/** Validates documents against the committed contracts in /contracts (events and engine schemas). */
+/** Validates documents against the committed contracts (events and engine schemas). */
 @Injectable()
 export class ContractValidator {
   private readonly ajv = new Ajv2020({ allErrors: true, strict: false });
@@ -30,22 +28,13 @@ export class ContractValidator {
   private readonly events = new Map<string, ValidateFunction>();
   private readonly engine = new Map<string, ValidateFunction>();
 
+  /** Schemas come from contracts/ via `npm run contracts:generate`, embedded so the bundle is self-contained. */
   constructor() {
     addFormats(this.ajv);
-    const dir = repoPath("contracts/events");
-    const index = JSON.parse(readFileSync(join(dir, "index.json"), "utf8")) as {
-      envelope: string;
-      events: Record<string, string>;
-    };
-    this.envelope = this.ajv.compile(JSON.parse(readFileSync(join(dir, index.envelope), "utf8")));
-    for (const [type, file] of Object.entries(index.events)) {
-      this.events.set(type, this.ajv.compile(JSON.parse(readFileSync(join(dir, file), "utf8"))));
-    }
-    const engineDir = repoPath("contracts/engine");
-    for (const name of ["plan-request", "plan-response"]) {
-      const schema = JSON.parse(readFileSync(join(engineDir, `${name}.v1.schema.json`), "utf8"));
-      this.engine.set(name, this.ajv.compile(schema));
-    }
+    const clone = (x: unknown) => JSON.parse(JSON.stringify(x)) as object;
+    this.envelope = this.ajv.compile(clone(CONTRACT_SCHEMAS.envelope));
+    for (const [type, schema] of Object.entries(CONTRACT_SCHEMAS.events)) this.events.set(type, this.ajv.compile(clone(schema)));
+    for (const [name, schema] of Object.entries(CONTRACT_SCHEMAS.engine)) this.engine.set(name, this.ajv.compile(clone(schema)));
   }
 
   eventTypes(): string[] {
