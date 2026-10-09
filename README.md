@@ -4,6 +4,8 @@ Ordering and replenishment platform for a large omnichannel department-store ret
 
 The slice imports a legacy-style extract, forecasts demand per SKU, location, channel and day, recommends purchase orders with a step-by-step explanation, lets a planner override and approve within an approval limit, creates the purchase order through a mock ERP, and records events, audit history and KPIs.
 
+Live demo: <https://replen-alpha.vercel.app>. Pick any role at sign-in. The data is synthetic, shared by every visitor and reset daily; the first request after a quiet period takes a few seconds while the functions start. Deployment notes are in [docs/11-vertical-slice.md](docs/11-vertical-slice.md#hosted-demo-vercel).
+
 ![Proposal workbench](docs/img/03-proposal-moq-conflict.png)
 
 ## Quick start
